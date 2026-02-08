@@ -4,6 +4,7 @@ import { products } from '../data/products';
 import { Star, ShoppingCart, Heart, Truck, Shield, ArrowLeft } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { ProductCard } from '../components/ProductCard';
+import { formatPrice } from '../utils/formatPrice';
 import { useCart } from '../contexts/CartContext';
 import { toast } from 'sonner@2.0.3';
 import { motion } from 'motion/react';
@@ -138,7 +139,7 @@ export function ProductDetailPage() {
               </span>
             </div>
 
-            <div className="text-3xl font-semibold mb-8">${product.price}</div>
+            <div className="text-3xl font-semibold mb-8">{formatPrice(product.price)}</div>
 
             {/* Color Selection */}
             <div className="mb-6">
@@ -233,7 +234,7 @@ export function ProductDetailPage() {
                 <Truck className="h-5 w-5 text-blue-900 mr-3 mt-1" />
                 <div>
                   <p className="font-medium">Free Shipping</p>
-                  <p className="text-sm text-gray-600">On orders over $100</p>
+                  <p className="text-sm text-gray-600">On orders over {formatPrice(100, 0)}</p>
                 </div>
               </div>
               <div className="flex items-start">

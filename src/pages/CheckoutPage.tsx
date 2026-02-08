@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
+import { formatPrice } from '../utils/formatPrice';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -206,7 +207,7 @@ export function CheckoutPage() {
                           <div className="text-sm text-gray-600">5-7 business days</div>
                         </label>
                         <div className="font-semibold">
-                          {getCartTotal() >= 100 ? 'FREE' : '$10.00'}
+                          {getCartTotal() >= 100 ? 'FREE' : formatPrice(10)}
                         </div>
                       </div>
                       <div className="flex items-center space-x-3 p-4 border border-gray-300 rounded-lg cursor-pointer hover:border-blue-900">
@@ -215,7 +216,7 @@ export function CheckoutPage() {
                           <div className="font-medium">Express Delivery</div>
                           <div className="text-sm text-gray-600">2-3 business days</div>
                         </label>
-                        <div className="font-semibold">$20.00</div>
+                        <div className="font-semibold">{formatPrice(20)}</div>
                       </div>
                     </div>
                   </RadioGroup>
@@ -346,7 +347,7 @@ export function CheckoutPage() {
                         Qty: {item.quantity} | Size: {item.size}
                       </p>
                       <p className="text-sm font-semibold">
-                        ${(item.price * item.quantity).toFixed(2)}
+                        {formatPrice(item.price * item.quantity)}
                       </p>
                     </div>
                   </div>
@@ -356,15 +357,15 @@ export function CheckoutPage() {
               <div className="border-t border-gray-200 pt-4 space-y-2">
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal</span>
-                  <span>${getCartTotal().toFixed(2)}</span>
+                  <span>{formatPrice(getCartTotal())}</span>
                 </div>
                 <div className="flex justify-between text-gray-600">
                   <span>Shipping</span>
-                  <span>{shippingCost === 0 ? 'FREE' : `$${shippingCost.toFixed(2)}`}</span>
+                  <span>{shippingCost === 0 ? 'FREE' : formatPrice(shippingCost)}</span>
                 </div>
                 <div className="border-t border-gray-300 pt-2 flex justify-between font-semibold text-lg">
                   <span>Total</span>
-                  <span>${total.toFixed(2)}</span>
+                  <span>{formatPrice(total)}</span>
                 </div>
               </div>
             </div>

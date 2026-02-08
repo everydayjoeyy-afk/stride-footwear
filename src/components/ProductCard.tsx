@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Star, ShoppingCart } from 'lucide-react';
 import { Product } from '../data/products';
+import { formatPrice } from '../utils/formatPrice';
 import { Button } from './ui/button';
 import { useCart } from '../contexts/CartContext';
 import { toast } from 'sonner@2.0.3';
@@ -54,7 +55,7 @@ export function ProductCard({ product }: ProductCardProps) {
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-xl font-semibold">${product.price}</span>
+              <span className="text-xl font-semibold">{formatPrice(product.price)}</span>
               <Button
                 size="sm"
                 onClick={handleAddToCart}

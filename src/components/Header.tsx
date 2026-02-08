@@ -26,7 +26,7 @@ export function Header() {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
             <div className="text-2xl md:text-3xl tracking-tight">
-              <span className="font-bold">STRIDE</span>
+              <span className="font-bold">PYF</span>
             </div>
           </Link>
 

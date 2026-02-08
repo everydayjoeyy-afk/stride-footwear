@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Trash2, ShoppingBag, ArrowLeft } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
+import { formatPrice } from '../utils/formatPrice';
 import { Button } from '../components/ui/button';
 import { motion } from 'motion/react';
 
@@ -100,9 +101,9 @@ export function CartPage() {
                         </button>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold">${(item.price * item.quantity).toFixed(2)}</p>
+                        <p className="font-semibold">{formatPrice(item.price * item.quantity)}</p>
                         {item.quantity > 1 && (
-                          <p className="text-sm text-gray-600">${item.price} each</p>
+                          <p className="text-sm text-gray-600">{formatPrice(item.price)} each</p>
                         )}
                       </div>
                     </div>
@@ -120,20 +121,20 @@ export function CartPage() {
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal</span>
-                  <span>${getCartTotal().toFixed(2)}</span>
+                  <span>{formatPrice(getCartTotal())}</span>
                 </div>
                 <div className="flex justify-between text-gray-600">
                   <span>Shipping</span>
-                  <span>{shippingCost === 0 ? 'FREE' : `$${shippingCost.toFixed(2)}`}</span>
+                  <span>{shippingCost === 0 ? 'FREE' : formatPrice(shippingCost)}</span>
                 </div>
                 {getCartTotal() < 100 && (
                   <p className="text-sm text-blue-900 bg-blue-50 p-2 rounded">
-                    Add ${(100 - getCartTotal()).toFixed(2)} more for free shipping!
+                    Add {formatPrice(100 - getCartTotal())} more for free shipping!
                   </p>
                 )}
                 <div className="border-t border-gray-300 pt-3 flex justify-between font-semibold text-lg">
                   <span>Total</span>
-                  <span>${total.toFixed(2)}</span>
+                  <span>{formatPrice(total)}</span>
                 </div>
               </div>
 
@@ -161,7 +162,7 @@ export function CartPage() {
                 </div>
                 <div className="flex items-center">
                   <span className="mr-2">✓</span>
-                  <span>Free shipping over $100</span>
+                  <span>Free shipping over {formatPrice(100, 0)}</span>
                 </div>
               </div>
             </div>

@@ -1,13 +1,71 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Star } from 'lucide-react';
-import { products } from '../data/products';
+import { Product } from '../data/products';
 import { ProductCard } from '../components/ProductCard';
 import { Button } from '../components/ui/button';
 import { motion } from 'motion/react';
+import { supabase } from '../supabase/client';
+
+type SupabaseProductRow = {
+  id: string;
+  name: string;
+  price: number;
+  image?: string | null;
+  image_url?: string | null;
+  gender?: string | null;
+  category?: string | null;
+  rating?: number | null;
+  colors?: string[] | null;
+  sizes?: number[] | null;
+  description?: string | null;
+  materials?: string | null;
+  is_best_seller?: boolean | null;
+};
+
+function mapRowToProduct(row: SupabaseProductRow): Product {
+  const category = (row.gender || row.category || 'casual') as Product['category'];
+  return {
+    id: String(row.id),
+    name: row.name,
+    category: ['slides', 'sneakers', 'sandals', 'formal', 'casual'].includes(category) ? category : 'casual',
+    price: Number(row.price),
+    rating: Number(row.rating) || 0,
+    image: row.image || row.image_url || '',
+    colors: Array.isArray(row.colors) && row.colors.length > 0 ? row.colors : ['black'],
+    sizes: Array.isArray(row.sizes) && row.sizes.length > 0 ? row.sizes : [7, 8, 9, 10, 11, 12],
+    description: row.description || '',
+    materials: row.materials || '',
+    isBestSeller: row.is_best_seller ?? false,
+  };
+}
 
 export function HomePage() {
   const [email, setEmail] = useState('');
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [featuredLoading, setFeaturedLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setFeaturedLoading(true);
+    supabase
+      .from('products')
+      .select('*')
+      .then(({ data, error: err }) => {
+        if (cancelled) return;
+        setFeaturedLoading(false);
+        if (err) {
+          setFeaturedProducts([]);
+          return;
+        }
+        const list = (data ?? []).map((row) => mapRowToProduct(row as SupabaseProductRow));
+        const bestSellers = list.filter((p) => p.isBestSeller);
+        setFeaturedProducts(bestSellers.length > 0 ? bestSellers : list.slice(0, 4));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const categories = [
     { id: 'slides', name: 'Slides', image: 'https://images.unsplash.com/photo-1625318880107-49baad6765fd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsZWF0aGVyJTIwc2xpZGVzJTIwc2FuZGFsc3xlbnwxfHx8fDE3NzAzOTg4MDh8MA&ixlib=rb-4.1.0&q=80&w=1080' },
@@ -16,8 +74,6 @@ export function HomePage() {
     { id: 'formal', name: 'Formal Shoes', image: 'https://images.unsplash.com/photo-1552422554-0d5af0c79fc6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmb3JtYWwlMjBkcmVzcyUyMHNob2VzfGVufDF8fHx8MTc3MDI3NDU3N3ww&ixlib=rb-4.1.0&q=80&w=1080' },
     { id: 'casual', name: 'Casual Footwear', image: 'https://images.unsplash.com/photo-1759527588071-e143b4a451b0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjYXN1YWwlMjBjYW52YXMlMjBzaG9lc3xlbnwxfHx8fDE3NzAzNjY3MzF8MA&ixlib=rb-4.1.0&q=80&w=1080' },
   ];
-
-  const bestSellers = products.filter(p => p.isBestSeller);
 
   const testimonials = [
     {
@@ -64,11 +120,14 @@ export function HomePage() {
             transition={{ duration: 0.6 }}
             className="text-white max-w-2xl"
           >
-            <h1 className="text-4xl md:text-6xl lg:text-7xl mb-6">
-              Step into Comfort & Style
+            <p className="text-sm md:text-base uppercase tracking-widest text-gray-300 mb-2">
+              PYF est 2022
+            </p>
+            <h1 className="text-4xl md:text-6xl lg:text-7xl mb-4">
+              Pamper Your Feet
             </h1>
             <p className="text-lg md:text-xl mb-8 text-gray-200">
-              Discover premium footwear designed for every occasion. Quality craftsmanship meets modern design.
+              Comfort. Style. Affordability.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Link to="/shop">
@@ -136,9 +195,15 @@ export function HomePage() {
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {bestSellers.map(product => (
-              <ProductCard key={product.id} product={product} />
-            ))}
+            {featuredLoading ? (
+              [...Array(4)].map((_, i) => (
+                <div key={i} className="bg-gray-200 rounded-lg aspect-square animate-pulse" />
+              ))
+            ) : (
+              featuredProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))
+            )}
           </div>
           <div className="text-center mt-12">
             <Link to="/shop">

@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { CheckCircle, Package, ArrowRight } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
+import { formatPrice } from '../utils/formatPrice';
 import { Button } from '../components/ui/button';
 import { motion } from 'motion/react';
 
@@ -87,13 +88,13 @@ export function OrderConfirmationPage() {
                         Qty: {item.quantity} | Size: US {item.size} | {item.color}
                       </p>
                     </div>
-                    <p className="font-semibold">${(item.price * item.quantity).toFixed(2)}</p>
+                    <p className="font-semibold">{formatPrice(item.price * item.quantity)}</p>
                   </div>
                 ))}
               </div>
               <div className="mt-4 pt-4 border-t border-gray-200 flex justify-between items-center">
                 <span className="font-semibold text-lg">Total</span>
-                <span className="font-semibold text-2xl">${getCartTotal().toFixed(2)}</span>
+                <span className="font-semibold text-2xl">{formatPrice(getCartTotal())}</span>
               </div>
             </div>
           )}

@@ -1,16 +1,55 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { products, Product } from '../data/products';
+import { Product } from '../data/products';
 import { ProductCard } from '../components/ProductCard';
 import { Button } from '../components/ui/button';
 import { Slider } from '../components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Sheet, SheetContent, SheetTrigger } from '../components/ui/sheet';
 import { SlidersHorizontal } from 'lucide-react';
+import { supabase } from '../supabase/client';
+import { formatPrice } from '../utils/formatPrice';
+
+/** Supabase products table row (snake_case from DB) */
+type SupabaseProductRow = {
+  id: string;
+  name: string;
+  price: number;
+  image?: string | null;
+  image_url?: string | null;
+  gender?: string | null;
+  category?: string | null;
+  rating?: number | null;
+  colors?: string[] | null;
+  sizes?: number[] | null;
+  description?: string | null;
+  materials?: string | null;
+  is_best_seller?: boolean | null;
+};
+
+function mapRowToProduct(row: SupabaseProductRow): Product {
+  const category = (row.gender || row.category || 'casual') as Product['category'];
+  return {
+    id: String(row.id),
+    name: row.name,
+    category: ['slides', 'sneakers', 'sandals', 'formal', 'casual'].includes(category) ? category : 'casual',
+    price: Number(row.price),
+    rating: Number(row.rating) || 0,
+    image: row.image || row.image_url || '',
+    colors: Array.isArray(row.colors) && row.colors.length > 0 ? row.colors : ['black'],
+    sizes: Array.isArray(row.sizes) && row.sizes.length > 0 ? row.sizes : [7, 8, 9, 10, 11, 12],
+    description: row.description || '',
+    materials: row.materials || '',
+    isBestSeller: row.is_best_seller ?? false,
+  };
+}
 
 export function ShopPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>(products);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
   const [selectedCategory, setSelectedCategory] = useState<string>(searchParams.get('category') || 'all');
   const [selectedSize, setSelectedSize] = useState<string>('all');
@@ -22,6 +61,29 @@ export function ShopPage() {
   const categories = ['all', 'slides', 'sneakers', 'sandals', 'formal', 'casual'];
   const sizes = [7, 8, 9, 10, 11, 12];
   const colors = ['all', 'white', 'black', 'brown', 'navy', 'red', 'blue', 'gray', 'tan', 'khaki'];
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    supabase
+      .from('products')
+      .select('*')
+      .then(({ data, error: err }) => {
+        if (cancelled) return;
+        setLoading(false);
+        if (err) {
+          setError(err.message);
+          setProducts([]);
+          return;
+        }
+        const list = (data ?? []).map((row) => mapRowToProduct(row as SupabaseProductRow));
+        setProducts(list);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     let result = [...products];
@@ -61,7 +123,7 @@ export function ShopPage() {
     }
 
     setFilteredProducts(result);
-  }, [selectedCategory, selectedSize, priceRange, selectedColor, sortBy]);
+  }, [products, selectedCategory, selectedSize, priceRange, selectedColor, sortBy]);
 
   useEffect(() => {
     const category = searchParams.get('category');
@@ -131,8 +193,8 @@ export function ShopPage() {
             className="mb-4"
           />
           <div className="flex justify-between text-sm text-gray-600">
-            <span>${priceRange[0]}</span>
-            <span>${priceRange[1]}</span>
+            <span>{formatPrice(priceRange[0], 0)}</span>
+            <span>{formatPrice(priceRange[1], 0)}</span>
           </div>
         </div>
       </div>
@@ -166,7 +228,7 @@ export function ShopPage() {
           <h1 className="text-3xl md:text-4xl mb-4">Shop All Footwear</h1>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <p className="text-gray-600">
-              Showing {filteredProducts.length} of {products.length} products
+              {loading ? 'Loading…' : `Showing ${filteredProducts.length} of ${products.length} products`}
             </p>
             <div className="flex items-center gap-4 w-full sm:w-auto">
               <Select value={sortBy} onValueChange={setSortBy}>
@@ -210,7 +272,17 @@ export function ShopPage() {
 
           {/* Product Grid */}
           <div className="flex-1">
-            {filteredProducts.length > 0 ? (
+            {error ? (
+              <div className="text-center py-12">
+                <p className="text-red-600 text-lg">Failed to load products: {error}</p>
+              </div>
+            ) : loading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div key={i} className="bg-gray-100 rounded-lg aspect-square animate-pulse" />
+                ))}
+              </div>
+            ) : filteredProducts.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredProducts.map(product => (
                   <ProductCard key={product.id} product={product} />
